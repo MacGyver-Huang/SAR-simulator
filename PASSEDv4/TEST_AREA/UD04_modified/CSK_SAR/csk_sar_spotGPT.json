@@ -1,0 +1,34 @@
+{
+
+	// Name
+	"sensor_name": "DEBUG",
+	// Focused SAR Image Angle
+	"look_angle": 25.554884625,
+	"squint_angle": 0,
+	"target_aspect_angle": 0,
+	// SAR
+	// Ref: AN/PPS-5 MSTAR ground radar
+	"transmit_frequency": 0.31e9,
+	"PRF": 2500,
+	"sampling_rate": 300e6,
+	"pulse_width": 10e-6,
+	"chirp_bandwidth": 300e6,
+	"is_up_chirp": true,
+	// Data Dimension
+	"number_of_range": 3000,
+	"number_of_azimuth": 2000,
+	// Antenna
+	"beamwidth_azimuth": 1.79,
+	"beamwidth_elevation": 3.58,
+	// Datum
+	"datum_name": "WGS84",
+	// didn't change
+	"semi_major_length": 6378137.0,
+	"semi_mirror_length": 6356752.31414,
+	// Electric Field polarization
+	"TX_polization": "H",
+	"RX_polization": "VH",
+	// PO & PTD
+	"max_bouncing": 4,
+	"ray_density": 5
+}

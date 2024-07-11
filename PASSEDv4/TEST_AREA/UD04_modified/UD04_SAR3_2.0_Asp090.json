@@ -1,0 +1,23 @@
+{
+	"sensor_name": "DEBUG",
+	"look_angle": 72.636719,
+	"squint_angle": 0,
+	"target_aspect_angle": 90,
+	"transmit_frequency": 9.6e9,
+	"PRF": 213.4,
+	"sampling_rate": 591e6,
+	"pulse_width": 0.31865e-6,
+	"chirp_bandwidth": 591e6,
+	"is_up_chirp": true,
+	"number_of_range": 180,
+	"number_of_azimuth": 1100,
+	"beamwidth_azimuth": 2.0,
+	"beamwidth_elevation": 30.0,
+	"datum_name": "WGS84",
+	"semi_major_length": 6378137.0,
+	"semi_mirror_length": 6356752.31414,
+	"TX_polization": "H",
+	"RX_polization": "VH",
+	"max_bouncing": 4,
+	"ray_density": 5
+}

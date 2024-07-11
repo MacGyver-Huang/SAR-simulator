@@ -1,0 +1,26 @@
+##MATERIAL##
+# 1. (integer) [x] Index
+# 2. (string)  [x] Name
+# 3. (string)  [x] Frequency
+# 4. (float)   [x] Real part of relative permittivity, relative to Air [F/m]
+# 5. (float)   [x] Loss tangent (x10^-4)
+# 6. (float)   [x] real part of relative permeability, relative to Air [H/m]
+# 7. (float)   [x] imag part of relative permeability, relative to Air [H/m]
+# 8. (float)   [mm] Depth of this Layer
+# 9. (string)  [x] Remark
+# Ref:
+#		http://www.rfcafe.com/references/electrical/dielectric-constants-strengths.htm
+#		http://www.kayelaby.npl.co.uk/general_physics/2_6/2_6_5.html
+#
+{1, "PEC", "", 1E30, 0, 1, 0, 5, ""}
+{2, "Air", "", 1, 0, 1, 0, 5, ""}
+{3, "Alumina", "50 Hz/1 MHz", 8.5, 4, 1, 0, 5, ""}
+{4, "Poly-vinyl chloride(PVC)", "1 MHz/10 MHz", 4, 600, 1, 0, 5, ""}
+{5, "ABS", "", 3.5, 190, 1, 0, 5, ""}
+{6, "Glasses(Lead)", "50 Hz/100 MHz", 3.8, 10, 1, 0, 5, ""}
+{7, "Soil(Dry)", "1 MHz", 3, 400, 1, 0, 5, ""}
+{8, "Soil(Moist)", "1 MHz", 10, 400, 1, 0, 5, ""}
+{9, "Water(20C/1MHz)", "1 MHz", 80.4, 400, 1, 0, 5, ""}
+{10, "Water(20C/3GHz)", "3 GHz", 80.4, 1570, 1, 0, 5, ""}
+{11, "Wood(0.1GHz)", "0.1 GHz", 1.2, 400, 1, 0, 5, ""}
+{12, "Wood(3GHz)", "3 GHz", 2.1, 300, 1, 0, 5, ""}

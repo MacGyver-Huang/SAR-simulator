@@ -1,0 +1,35 @@
+CC = g++
+CFLAGS = -O3 -std=c++11 -Wall -DDEBUG
+
+LIB = -lm `pkg-config --libs opencv` \
+		-ltinyxml \
+		-ljsoncpp \
+		`pkg-config --libs openssl11` \
+		-lassimp
+
+FOLDER = ../RCS_cuda/include/
+INC = -I$(FOLDER) \
+		-I/usr/include/ \
+		-I/usr/include/opencv/ \
+		-I/usr/include/jsoncpp/ \
+		-I/usr/include/openssl11/ \
+		-I/usr/include/assimp/
+
+
+TARGETS = PASSEDv3_RDA_ORG
+
+all : clean $(TARGETS) link
+
+$(TARGETS) : $($@.cu)
+	$(CC) $(CFLAGS) $(INC) $(LIB) main_ORG.cpp -o $@
+
+link :
+	rm -f ./PASSEDv3_RDA
+	ln -s ./PASSEDv3_RDA_ORG ./PASSEDv3_RDA
+
+clean : 
+	rm -f $(TARGETS)
+
+copy :
+	cp main.cpp $(TARGETS).cpp
+	rm -f $(TARGETS)

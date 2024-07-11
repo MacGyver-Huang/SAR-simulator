@@ -1,0 +1,43 @@
+#+=============================+
+#|        RCS simulator        |
+#+=============================+
+#
+# This *.parset is for TEST ONLY
+# for T72 tank simulation
+# parameter extracted from: hb03333.015.hdr
+#
+# Name
+Sensor Name = TEST
+# Look-Angle
+# MeasuredDepression= 15.078125
+Multi-Look angle = No
+Look angle (from) [deg] = 72.636719
+Look angle (to) [deg] = 0
+Look angle (step) [deg] = 0
+# Aspect Angle
+# Calculated by program "SBR_PhiPredict"
+Multi-Aspect angle = Yes
+Target Aspect angle (from) [deg] = -8.6751456
+Target Aspect angle (to) [deg] = 8.6711422
+Target Aspect angle (step) [deg] = 0.0033365
+# SAR
+Transmitted frequency [Hz] = 9.6e9
+ADC sampling rate [Hz/sec] = 591e6
+# Data Dimension
+# Slant range dimension
+Number of Range [sample] = 180
+# Electric Field
+TX Polization = H
+RX Polization = VH
+# PO approximation coeff.
+Taylor Limit Value = 0.5
+Taylor Series Number = 5
+#Taylor Limit Value = 1.0
+#Taylor Series Number = 0
+Max Bouncing Number = 4
+#Max Bouncing Number = 1
+# Incident Mesh
+Mesh Scale Factor = 0.1
+Mesh Distance from targets center = 500
+# Remark:
+# The "#" is for comment only

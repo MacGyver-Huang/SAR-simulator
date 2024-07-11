@@ -1,0 +1,30 @@
+CC = g++
+CFLAGS = -O3 -std=c++11 -Wall -DDEBUG
+
+LIB = -lm `pkg-config --libs opencv` \
+		-ltinyxml \
+		-ljsoncpp \
+		-lssl -lcrypto \
+		-lassimp
+
+FOLDER = ../RCS_cuda/include/
+INC = -I$(FOLDER) \
+		-I/usr/include/ \
+		-I/usr/include/opencv/ \
+		-I/usr/include/jsoncpp/ \
+		-I/usr/include/openssl11/ \
+		-I/usr/include/assimp/
+
+
+TARGETS = PASSEDv3_RDA_WF
+
+all : clean $(TARGETS)
+
+$(TARGETS) : $($@.cu)
+	$(CC) $(CFLAGS) $(INC) main_WF.cpp $(LIB) -o $@
+
+clean : 
+	rm -f $(TARGETS)
+
+copy :
+	cp $(TARGETS) ../../bin/.

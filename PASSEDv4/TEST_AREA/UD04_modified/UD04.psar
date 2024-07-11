@@ -1,0 +1,44 @@
+#+=============================+
+#| SAR echo signal simulator   |
+#+=============================+
+#
+# This *.parset is for TEST ONLY
+# for T72 tank simulation
+# parameter extracted from: hb03790.015.hdr
+#
+# Name
+Sensor Name = TEST
+# Angle
+Multi-Look angle = No
+Look angle (from) [deg] = 72.636719
+Look angle (to) [deg] = 0
+Look angle (step) [deg] = 0
+Multi-Aspect angle = No
+Target Aspect angle (from) [deg] = 0
+Target Aspect angle (to) [deg] = 0
+Target Aspect angle (step) [deg] = 0
+Squint angle [deg] = 0
+# SAR
+# Ref: AN/PPS-5 MSTAR ground radar
+Transmitted frequency [Hz] = 9.6e9
+Pulse Repeat Frequency [Hz] = 213.4
+ADC sampling rate [Hz/sec] = 591e6
+Duty Cycle [%] = 6.8
+Chirp bandwidth [Hz] = 591e6
+Slant Range Swath [m] = 20
+# Antenna
+Length at azimuth [m] = 0.49293516
+Length at elevation [m] = 5.2423263
+Antenna effective coefficient = 1.0
+# Datum
+Datum = WGS84
+Earth semi-major length [m] = 6378137.0
+Earth semi-mirror length [m] = 6356752.31414
+# Data Dimension
+Number of Range [sample] = 180
+Number of Azimuth [sample] = 1100
+# Electric Field
+TX Polization = H
+RX Polization = VH
+# Remark:
+# The "#" is for comment only

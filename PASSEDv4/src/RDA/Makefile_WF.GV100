@@ -1,0 +1,33 @@
+CC = nvcc
+CFLAGS = -O3 -std=c++11 -gencode arch=compute_70,code=sm_70 #-Wall -DDEBUG
+
+# The jsoncpp was compiled error in link stage using g++. But in nvcc it's correct.
+# Need to trace the problem
+
+LIB = -lm  \
+		-ltinyxml \
+		-ljsoncpp \
+		-lssl -lcrypto \
+		-lassimp
+
+FOLDER = ../RCS_cuda/include/
+INC = -I$(FOLDER) \
+		-I/usr/include/ \
+		-I/usr/include/jsoncpp/ \
+		-I/usr/include/openssl11/ \
+		-I/usr/include/assimp/
+
+
+TARGETS = PASSEDv3_RDA_WF_GV100
+
+all : clean $(TARGETS)
+
+$(TARGETS) : $($@.cu)
+	$(CC) $(CFLAGS) $(INC) $(LIB) main_WF.cpp -o $@
+
+clean : 
+	rm -f $(TARGETS)
+
+copy:
+	cp $(TARGETS) ../../bin/.
+

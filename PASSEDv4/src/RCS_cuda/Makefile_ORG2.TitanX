@@ -1,0 +1,32 @@
+CC = nvcc
+# -gencode arch=compute_70,code=sm_70 (Quadro GV100)
+# -gencode arch=compute_61,code=sm_61 (GeForce GTX 1080 Ti)
+# -gencode arch=compute_61,code=sm_61 (GeForce GTX TITAN)
+# -gencode arch=compute_13,code=sm_13 (GeForce GTX 295)
+# -gencode arch=compute_10,code=sm_10 (GeForce 320M)
+CFLAGS = -O3 -std=c++11 -gencode arch=compute_75,code=sm_75 --ptxas-options="-v" -lineinfo# -maxrregcount=64
+
+LIB = -lm `pkg-config --libs opencv4` \
+      -ljsoncpp \
+      `pkg-config --libs openssl` \
+      -lassimp \
+      -ltinyxml2
+FOLDER = ./include/
+INC = -I$(FOLDER) -I/usr/local/cuda/samples/0_Simple/simplePrintf \
+      -I/usr/include/ \
+      -I/usr/include/opencv4/ \
+      -I/usr/include/jsoncpp/ \
+      -I/usr/local/openssl/ \
+      -I/usr/include/assimp/
+
+TARGETS = PASSEDv4_ORG2_TitanX
+SRCS = main_ORG2.cu
+
+all : clean $(TARGETS)
+
+$(TARGETS) : $(SRCS)
+	$(CC) $(CFLAGS) $(INC) $^ -o $@ $(LIB)
+
+clean : 
+	rm -f $(TARGETS)
+

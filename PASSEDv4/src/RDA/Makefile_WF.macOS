@@ -1,0 +1,31 @@
+CC = g++
+CFLAGS = -O3 -std=c++11 -Wall -DDEBUG
+
+LIB = -lm  \
+		-ltinyxml \
+		-ljsoncpp \
+		-lassimp \
+		-L/usr/local/opt/openssl/lib/ \
+		-lssl -lcrypto
+
+FOLDER = ../RCS_cuda/include/
+INC = -I$(FOLDER) \
+		-I/usr/include/ \
+		-I/usr/include/jsoncpp/ \
+		-I/usr/include/assimp/ \
+		-I/usr/local/Cellar/openssl@1.1/1.1.1i/include/		
+		
+
+TARGETS = PASSEDv3_RDA_WF_macOS
+
+all : clean $(TARGETS)
+
+$(TARGETS) : $($@.cu)
+	$(CC) $(CFLAGS) $(INC) main_WF.cpp $(LIB) -o $@
+
+clean : 
+	rm -f $(TARGETS)
+
+copy :
+	cp main.cpp $(TARGETS).cpp
+	rm -f $(TARGETS)

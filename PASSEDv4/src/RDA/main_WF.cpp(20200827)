@@ -1,0 +1,510 @@
+//
+//  Created by Steve Chiang on 5/9/14.
+//  Copyright (c) 2014 Steve Chiang. All rights reserved.
+//
+#define NORMALH
+
+#ifdef DEBUG
+#undef DEBUG
+#endif
+
+
+
+#include <sar/sar.h>
+#include <bvh/obj.h>
+#include <bvh/ray.h>
+#include <basic/WFds.h>
+#include <basic/new_dir.h>
+#include <string>
+
+
+using namespace std;
+using namespace vec;
+using namespace sv;
+using namespace new_dir;
+using namespace def_prefunc;
+using namespace WFds;
+
+
+
+void WFEmulatorSARFocusing(const string dir, const Meta& meta, const string Rx_POL, const bool ShowSummary=false){
+
+	string file_PROC_par = dir + "FOCUS_PAR_"+Rx_POL+".meta";
+	string file_Sac      = dir + "EXP_FOCUS_SAR_"+Rx_POL+".dat";
+	string file_Sac_hdr  = dir + "EXP_FOCUS_SAR_"+Rx_POL+".hdr";
+	string file_R0       = dir + "FOCUS_R0.dat";
+	string file_Ra       = dir + "FOCUS_Ra.dat";
+
+	//+--------------------------------------------------+
+	//|                Read Coefficient                  |
+	//+--------------------------------------------------+
+	D1<double> coeff = ReadWFEmulatorCoeff(dir+"EXP_coeff.dat");
+
+	//+--------------------------------------------------+
+	//|               Read State Vector                  |
+	//+--------------------------------------------------+
+	SV<double> sv = ReadWFEmulatorStateVector(dir+"EXP_StateVector.dat");//, true);
+
+	//+--------------------------------------------------+
+	//|              Read Target location                |
+	//+--------------------------------------------------+
+	VEC<double> tar_pos = ReadWFEmulatorTargetLocation(dir+"EXP_Target.dat");
+	tar_pos.Print();
+
+	//+--------------------------------------------------+
+	//|            [Debug] Read freq_nfreq.txt           |
+	//+--------------------------------------------------+
+	D1<double> Freq, nFreq;
+	ReadWFEmulatorFreq(dir+"EXP_Freq.dat", Freq, nFreq);
+
+
+	//+--------------------------------------------------+
+	//|              Read SAR echo signal                |
+	//+--------------------------------------------------+
+	string EXPORT_H = dir + "EXP_H"+meta.tx_pol()+".dat";
+	string EXPORT_V = dir + "EXP_V"+meta.tx_pol()+".dat";
+
+	string file_s0 = EXPORT_H;
+	if(Rx_POL == "V"){
+		file_s0 = EXPORT_V;
+	}
+	D2<CPLX<double> > s0 = ReadWFEmulatorSAREcho(dir+"EXP.meta", file_s0);
+
+
+	//+-------------------------------------------------------------------------------------+
+	//|                                      Make SAR                                       |
+	//+-------------------------------------------------------------------------------------+
+	double sp_rg = def::C/(2*meta.Fr());
+	cout<<"+----------------------------------------+"<<endl;
+	cout<<"|            Range Compression           |"<<endl;
+	cout<<"+----------------------------------------+"<<endl;
+	D2<CPLX<double> > Src = s0;
+	FFTX(Src);
+	fftshiftx(Src);
+
+	cout<<"+----------------------------------------+"<<endl;
+	cout<<"|              Slant range               |"<<endl;
+	cout<<"+----------------------------------------+"<<endl;
+	// Slant range series
+	D1<double> R0_range(meta.Nr());
+	linspace(meta.Rn_slant(), meta.Rf_slant(), R0_range);
+
+	cout<<"+----------------------------------------+"<<endl;
+	cout<<"|           Effective velocity           |"<<endl;
+	cout<<"+----------------------------------------+"<<endl;
+	D1<double> vel(meta.Na()-1);
+
+	for(size_t i=1;i<meta.Na();++i){
+		double dt = sv.t()[i] - sv.t()[i-1];
+		double dis = (sv.pos()[i] - sv.pos()[i-1]).abs();
+		vel[i-1] = dis/dt;
+	}
+
+	double Vr = mean(vel);
+
+	cout<<"Vr = "<<Vr<<" [m/s]"<<endl;
+	double sp_az = Vr/(2*meta.PRF());
+
+
+	cout<<"+----------------------------------------+"<<endl;
+	cout<<"|           Doppler estimation           |"<<endl;
+	cout<<"+----------------------------------------+"<<endl;
+	double theta_sqc = deg2rad(0);
+	double lambda = def::C/meta.f0();
+	double fdc_ideal = 2*Vr*sin(theta_sqc)/lambda;
+
+	double Tr = 1e-6;
+	double Kr = meta.BWrg() / Tr;
+	double fdc_est = sar::find::AbsolutedCentroidFreq::MLCC(Src, meta.Fr(), meta.f0(), meta.PRF(), Kr, Tr, true);
+
+	double theta_sqc_est = asin(fdc_est*lambda/(2.0*Vr));
+	cout<<"theta_sqc_est = "<<rad2deg(theta_sqc_est)<<" [deg]"<<endl;
+
+	double fdc = fdc_ideal;
+	double fdc_shift;
+	D1<double> fn(meta.Na());
+	sar::find::InsFreqOfMatchedFilter(fdc, meta.PRF(), fn, fdc_shift);
+
+	cout<<"+----------------------------------------+"<<endl;
+	cout<<"|      Transform to Range-Doppler        |"<<endl;
+	cout<<"+----------------------------------------+"<<endl;
+	D2<CPLX<double> > Srd = Src;
+	FFTY(Srd);
+
+	cout<<"+----------------------------------------+"<<endl;
+	cout<<"|      Secondary Range Compression       |"<<endl;
+	cout<<"+----------------------------------------+"<<endl;
+	D1<double> ft(meta.Nr());
+	double shift_ft;
+	sar::find::InsFreqOfMatchedFilter(0., meta.Fr(), ft, shift_ft);
+
+
+	// Transform to 2D frequency domain
+	D2<CPLX<double> > Sf2 = Srd;
+	FFTX(Sf2);
+
+	// Using Option 2 for SRC
+	for(size_t i=0;i<meta.Na();++i){
+		double D = sqrt( 1.0 - Square(lambda*fn[i])/(4.0*Square(Vr)) );		// (6.24) (P.251)
+		for(size_t j=0;j<meta.Nr();++j){
+			double Ksrc = 2.0*Square(Vr)*Cubic(meta.f0())*Cubic(D)/(def::C*R0_range[j]*Square(fn[i]));	// (6.22)
+			CPLX<double> Hsrc = mat::exp(CPLX<double>(0,-def::PI*Square(ft[j])/Ksrc));
+
+			Sf2[i][j] = Sf2[i][j] * Hsrc;
+		}
+	}
+
+	// Tranfrom to Range-Doppler domain
+	D2<CPLX<double> > Srd2 = Sf2;
+	IFFTX(Srd2);
+
+
+	cout<<"+----------------------------------------+"<<endl;
+	cout<<"|                  RCMC                  |"<<endl;
+	cout<<"+----------------------------------------+"<<endl;
+	D1<double> Vr_range(meta.Nr());
+	for(size_t j=0;j<meta.Nr();++j){
+		Vr_range[j] = Vr;
+	}
+
+	// Make series along azimuth
+	D1<double> D(meta.Na());
+	for(size_t i=0;i<meta.Na();++i){
+		D[i] = sqrt( 1.0 - Square(lambda*fn[i])/(4.*Square(Vr)) );	// (6.24)
+	}
+
+	// Make RCM 2D-array
+	D2<double> RCM(meta.Na(), meta.Nr());
+	for(size_t i=0;i<meta.Na();++i){
+		for(size_t j=0;j<meta.Nr();++j){
+			RCM[i][j] = -R0_range[j] * ((1.-D[i])/D[i]) / sp_rg;	// (6.25)
+		}
+	}
+
+	// Apply RCMC
+	D2<CPLX<double> > Srcmc_rd = sar::RCMCSinc(Srd2, RCM, true);
+
+	cout<<"+----------------------------------------+"<<endl;
+	cout<<"|          RCMC - center shift           |"<<endl;
+	cout<<"+----------------------------------------+"<<endl;
+	long shift_num = meta.Rc_slant() / sp_rg;
+	// warp
+	shift_num = shift_num % meta.Nr();
+	// Add Nr/2
+	shift_num += meta.Nr()/2;
+
+	for(size_t i=0;i<Srcmc_rd.GetM();++i){
+		mat::shift( Srcmc_rd.GetPtr()+i*Srcmc_rd.GetN(), Srcmc_rd.GetN(), -shift_num);
+	}
+
+
+	cout<<"+----------------------------------------+"<<endl;
+	cout<<"|           Azimuth focusing             |"<<endl;
+	cout<<"+----------------------------------------+"<<endl;
+	size_t num_rg = Srcmc_rd.GetN();
+	size_t num_az = Srcmc_rd.GetM();
+	D2<CPLX<double> > Sac(num_az, num_rg);
+
+	// Make series along azimuth
+	D = D1<double>(num_az);
+	for(size_t i=0;i<num_az;++i){
+		D[i] = sqrt( 1.0 - Square(lambda*fn[i])/(4.*Square(Vr)) );	// (6.24)
+	}
+
+	// make kaiser window (wk1)
+	D1<double> wk1 = sar::find::KaiserWindow(meta.PRF(), num_az, 2.1);
+	mat::fftshift(wk1);
+	mat::shift( wk1, fdc_shift );
+	// make kaiser window (wk2)
+	D1<double> wk2 = sar::find::KaiserWindow(meta.PRF(), num_az, 5.9);
+	mat::fftshift(wk2);
+
+
+	CPLX<double> Haz;
+
+
+	for(size_t j=0;j<num_rg;++j){	// range
+		for(size_t i=0;i<num_az;++i){
+			Haz = wk1[i] * mat::exp( CPLX<double>(0, def::PI4*R0_range[j]*D[i]*meta.f0()/def::C) );	// (6.26) (P.252)
+			Sac[i][j] = Srcmc_rd[i][j] * wk2[i] * Haz.conj();
+		}
+	}
+
+	// IFFT
+	IFFTY(Sac);
+
+
+	cout<<"+----------------------------------------+"<<endl;
+	cout<<"|        Convert to single float         |"<<endl;
+	cout<<"+----------------------------------------+"<<endl;
+	D2<CPLX<float> > Sac_float(Sac.GetM(), Sac.GetN());
+	for(size_t i=0;i<Sac_float.GetM();++i){
+		for(size_t j=0;j<Sac_float.GetN();++j){
+			Sac_float[i][j] = CPLX<float>( Sac[i][j].r(), Sac[i][j].i() );
+		}
+	}
+
+
+
+
+	cout<<"+----------------------------------------+"<<endl;
+	cout<<"|           Export Data & Meta           |"<<endl;
+	cout<<"+----------------------------------------+"<<endl;
+	//+-------------------+
+	//| Process Parameter |
+	//+-------------------+
+	char procp_title[] = "WaveFidelity SAR Processor\0";   // no effective
+	bool procp_SRC=false;               // effective
+	bool procp_deskew=false;            // effective
+
+	double time_near_range_raw = 2*R0_range[0]/def::C;
+	double time_far_range_raw  = 2*R0_range[R0_range.GetNum()-1]/def::C;
+
+	// Prepare the dominate parameters
+	SAR Sar;
+	Sar.PRF() = meta.PRF();
+	Sar.Fr() = meta.Fr();
+	Sar.Setf0( meta.f0() );
+	Sar.BWrg() = meta.BWrg();
+	Sar.Nr() = meta.Nr();
+	Sar.Na() = meta.Na();
+	ORB Orb;
+	EF Ef;
+	Ef.Pol() = Rx_POL + meta.tx_pol();
+	VEC<double> Psc = sv.pos()[sv.GetNum()/2];
+
+	// Initialize PROC_par
+	par::PROC_PAR procp=sar::Init_PROC_par(procp_title, procp_SRC, procp_deskew,
+										   Sar, Orb, Ef,
+										   Psc, sv.t()[0], sv.pos()[0], sv,
+										   time_near_range_raw, time_far_range_raw, Sar.Na());
+
+	//+---------------------------+
+	//| Find look angle region    |
+	//+---------------------------+
+	D1<double> theta_l_limit = sar::find::ThetaLookRegion(sv, R0_range, Orb);
+	double R0_mean = mat::mean(R0_range);
+
+	//+---------------------------+
+	//| Update *.slc.par          |
+	//+---------------------------+
+	double Laz = sp_az*2;	// Pesudo effective azimuth antenna length
+	// Doppler coefficience
+	D1<double> Vg = sar::find::GroundVelocity(sv, theta_l_limit, Orb);
+	double Vg_mean = (Vg[0] + Vg[1])/2.0;
+	// Doppler rate
+	double Ka = 2.0*Vr*Vr/(Sar.lambda()*R0_mean);
+	// Target exposure time
+	double Ta = 0.886*Sar.lambda()*R0_mean/(Laz*Vg_mean*cos(deg2rad(0.0)));
+	// Doppler Bandwidth
+	double dfd= abs(Ka) * Ta;
+	// Azimuth resolution
+	double azimres = 0.886*Vg_mean*cos(deg2rad(0.0))/dfd;
+
+
+
+	procp.ran_res =	def::C/(2*Sar.BWrg());	// range resolution
+	procp.azimres = azimres;				// azimuth resolution
+	procp.rpixsp = def::C/(2*Sar.Fr());		// range pixel spacing
+	procp.azimsp = Vr/meta.PRF();			// azimuth pixel spacing
+	procp.nrs  = (int)Sar.Nr();				// range sample
+	procp.nazs = (int)Sar.Na();				// azimuth sample
+	procp.DAR_dop = fdc_est;				// DAR doppler centroid
+	procp.fdp[0] = fdc_est;					// doppler centoid with polynomial fitting
+	strcpy(procp.sec_range_mig, "ON\0");	// Enable secondary range migration correction
+
+	// Doppler coefficient
+	if(ShowSummary){
+		cout<<"+-----------------------+"<<endl;
+		cout<<"|    Doppler coeff.     |"<<endl;
+		cout<<"+-----------------------+"<<endl;
+		cout<<" Azimuth eff. antenna (Laz) = "<<Laz<<" [m]"<<endl;
+		cout<<" Doppler Rate          (Ka) = "<<Ka<<" [Hz/sec]"<<endl;
+		cout<<" Exposure Time         (Ta) = "<<Ta<<" [sec]"<<endl;
+		cout<<" Doppler bandwidth    (dfd) = "<<dfd<<" [Hz]"<<endl;
+		cout<<" Azimuth resolution    (az) = "<<azimres<<" [m]"<<endl;
+		// Message
+		cout<<"+-----------------------+"<<endl;
+		cout<<"| Resolution & spacing  |"<<endl;
+		cout<<"+-----------------------+"<<endl;
+		cout<<" Range resolution   : "<<procp.ran_res<<" [m]"<<endl;
+		cout<<" Azimuth resolution : "<<procp.azimres<<" [m]"<<endl;
+		cout<<" Range spacing      : "<<procp.rpixsp<<" [m]"<<endl;
+		cout<<" Azimuth spacing    : "<<procp.azimsp<<" [m]"<<endl;
+		cout<<" Range samples      : "<<procp.nrs<<" [samples]"<<endl;
+		cout<<" Azimuth samples    : "<<procp.nazs<<" [samples]"<<endl;
+	}
+
+	//-------------------------------------------------------------------
+	// map coordinate
+	double SW = Sar.Nr() * procp.rpixsp;
+	GEO<double> Gsn, Gsc, Gsf;
+	GEO<double> Gcn, Gcc, Gcf;
+	GEO<double> Gen, Gec, Gef;
+
+	double look_mean = mean(theta_l_limit);
+
+	VEC<double> Ps, Ps1;
+	Ps = sv.pos()[0];
+	Ps1= sv.pos()[1];
+	sar::GetMapCoordinate(Sar, Orb, Ps, Ps1,	look_mean, SW, Gsn, Gsc, Gsf);
+
+	Ps = sv.pos()[(sv.GetNum()-1)/2];
+	Ps1= sv.pos()[(sv.GetNum()-1)/2+1];
+	sar::GetMapCoordinate(Sar, Orb, Ps, Ps1,	look_mean, SW, Gcn, Gcc, Gcf);
+
+	Ps = sv.pos()[sv.GetNum()-1];
+	Ps1= sv.pos()[sv.GetNum()-2];
+	VEC<double> dir_flight_path = (sv.pos()[sv.GetNum()-1] - sv.pos()[sv.GetNum()-2]);
+	double dis = (Ps - Ps1).abs();
+	Ps1= Ps + dis * dir_flight_path;
+	sar::GetMapCoordinate(Sar, Orb, Ps, Ps1,	look_mean, SW, Gen, Gec, Gef);
+
+	// assign
+	procp.map[0] = Gsn;
+	procp.map[1] = Gsf;
+	procp.map[2] = Gen;
+	procp.map[3] = Gef;
+	procp.map[4] = Gcc;
+
+	//+-------------------+
+	//| Process Parameter |
+	//+-------------------+
+	sar::write_PROC_par(file_PROC_par.c_str(), procp);
+
+	//+-----------------+
+	//| Azimuth sample  |
+	//+-----------------+
+	D1<double> Ra(Sar.Na());
+	Ra.Indgen();
+	Ra = (Ra - double(Ra.GetNum()-1)/2) * (Vr/Sar.PRF());
+
+
+	//+-----------------+
+	//|   Export Data   |
+	//+-----------------+
+	Sac_float.WriteBinary(file_Sac.c_str());
+	Ra.WriteBinary(file_Ra.c_str());
+	R0_range.WriteBinary(file_R0.c_str());
+	// envi header
+	envi::ENVIhdr hdr_H(Sac_float.GetN(), Sac_float.GetM(), 1, 0, Sac_float.GetType(), 0, "BIP");
+	hdr_H.WriteENVIHeader(file_Sac_hdr.c_str());
+}
+
+void Usage(const string name){
+	cout<<"+------------+"<<endl;
+	cout<<"|    Usage   |"<<endl;
+	cout<<"+------------+"<<endl;
+	cout<<"  "<<name<<" <dirRoot> <md5> <mission>"<<endl;
+	cout<<"             [-h] [-SHOW]"<<endl;
+}
+
+void Help(){
+	cout<<"+------------+"<<endl;
+	cout<<"|  Required  |"<<endl;
+	cout<<"+------------+"<<endl;
+	cout<<"  dirRoot            [string] WF Emulator workspace (e.g. /WFEmuRoot/)"<<endl;
+	cout<<"  md5                [string] MD5 check sum (e.g. 9acf725f32881e7b2034b61a6c024fd3)"<<endl;
+	cout<<"  mission            [string] Mission name (e.g. Mission3)"<<endl;
+	cout<<"+------------+"<<endl;
+	cout<<"|  Optional  |"<<endl;
+	cout<<"+------------+"<<endl;
+	cout<<"  -h                 [x] Show the help menu"<<endl;
+	cout<<"  -SHOW              [x] Display the summary messages on console"<<endl;
+}
+
+
+
+
+int main(int argc, char** argv) {
+
+	cout<<"****************************************************"<<endl;
+	cout<<"*                     PASSED                       *"<<endl;
+	cout<<"*--------------------------------------------------*"<<endl;
+	cout<<"*        Copyright 2018, HomeStudio Taiwan         *"<<endl;
+	cout<<"*               Created : 2010/09/06               *"<<endl;
+	cout<<"*         Last Modified : 2020/08/27               *"<<endl;
+	cout<<"*               Version : 3.2.1 (SAR)              *"<<endl;
+	cout<<"*                Author : Cheng-Yen Chiang         *"<<endl;
+	cout<<"****************************************************"<<endl;
+
+
+	//+----------------------------------+
+	//| Detect argument number of -h tag |
+	//+----------------------------------+
+	// Command Parser
+	CmdParser cmp(argc, argv);
+	string tmp;
+
+	// Print Help
+	if(cmp.GetVal("-h",  tmp)){ Usage(argv[0]); Help(); errorexit(); }
+
+	// Check input number
+	if(argc < 4){ Usage(argv[0]); errorexit(); }
+
+
+
+//	// ifstream fin(filename.c_str());
+//	Json::Value values;
+
+
+
+
+	//+---------------------------+
+	//| Read Input Parameters     |
+	//+---------------------------+
+	// required
+	string dirRoot   = string(argv[1]);
+	string md5       = string(argv[2]);
+	string mission   = string(argv[3]);
+
+
+//	string dirRoot = "/Users/cychiang/Documents/code/IdeaProjects/#WFEmuRoot/";
+//	string md5     = "9acf725f32881e7b2034b61a6c024fd3";
+//
+//	string mission = "Mission2";	// T72, Scale=1.0
+//	string mission = "Mission3";	// 1-Ball, Scale=1.0
+//	string mission = "STEVE003";	// T72_small, Scale=0.1 (example_CAD.3ds)
+//	string mission = "STEVE003_2";	// T72_small, Scale=1.0 (example_CAD.3ds)
+//	string mission = "STEVE003_3";	// T72, Scale=1.0, PRF=213.4
+//	string mission = "STEVE003_4";	// T72_small, Scale=1.0, PRF=1000
+
+
+
+	bool ShowSummary = false;
+	if(cmp.GetVal("-SHOW", tmp)){ ShowSummary = true; }	// Show summary message
+
+	// Export folder
+	string dir = dirRoot + md5 + "/Export/" + mission + "/";
+
+
+	//+--------------------------------------------------+
+	//|                   Read Meta                      |
+	//+--------------------------------------------------+
+	Meta meta = ReadWFEmulatorMeta(dir+"EXP.meta");
+	meta.Print();
+
+	string EXPORT_H = dir + "EXP_H"+meta.tx_pol()+".dat";
+	string EXPORT_V = dir + "EXP_V"+meta.tx_pol()+".dat";
+
+	if(FileExist(EXPORT_H)){
+		WFEmulatorSARFocusing(dir, meta, "H", ShowSummary);
+	}
+
+	if(FileExist(EXPORT_V)){
+		WFEmulatorSARFocusing(dir, meta, "V", ShowSummary);
+	}
+
+
+
+	cout<<endl<<">> Everthing is OK, Finsih! <<"<<endl;
+#ifdef _WIN32
+	system("pause");
+#endif
+	return 0;
+}
+
+
+
+
+

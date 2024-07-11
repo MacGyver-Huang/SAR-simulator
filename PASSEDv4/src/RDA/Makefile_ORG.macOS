@@ -1,0 +1,28 @@
+CC = g++
+CFLAGS = -O3 -std=c++11 -Wall -DDEBUG
+
+LIB = -lm  \
+		-ltinyxml \
+		-ljsoncpp \
+		-lassimp
+
+FOLDER = ../RCS_cuda/include/
+INC = -I$(FOLDER) \
+		-I/usr/include/ \
+		-I/usr/include/jsoncpp/ \
+		-I/usr/include/assimp/
+		
+
+TARGETS = PASSEDv3_RDA_ORG_macOS
+
+all : clean $(TARGETS)
+
+$(TARGETS) : $($@.cu)
+	$(CC) $(CFLAGS) $(INC) $(LIB) main_ORG.cpp -o $@
+
+clean : 
+	rm -f $(TARGETS)
+
+copy :
+	cp main.cpp $(TARGETS).cpp
+	rm -f $(TARGETS)
