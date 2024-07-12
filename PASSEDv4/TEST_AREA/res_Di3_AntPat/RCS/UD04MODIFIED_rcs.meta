@@ -1,0 +1,33 @@
+#+=============================+
+#|     RCS results (Meta)      |
+#+=============================+
+# Name
+SARCNF Name = ../UD04_modified/UD04_SAR3_2.0.json
+Result Name = UD04MODIFIED_rcs.dat
+#
+# (segment from *.parrcs)
+#
+# Angle
+Multi-Look angle = No
+Look angle (min) [deg] = 72.6367190
+Look angle (max) [deg] = 72.6367190
+Look angle (avg. step) [deg] = 0.0000000
+Multi-Aspect angle = Yes
+Target Aspect angle (min) [deg] = -1.8469756
+Target Aspect angle (max) [deg] = 1.8470494
+Target Aspect angle (avg. step) [deg] = 0.0033582
+# SAR
+Transmitted frequency [Hz] = 9600000000.0000
+ADC sampling rate [Hz/sec] = 591000000.0000
+# Data Dimension
+Number of Range [sample] = 180
+# Electric Field
+TX Polization = H
+RX Polization = VH
+# PO approximation coeff.
+Taylor Limit Value = 0.0001
+Taylor Series Number = 5
+Max Bouncing Number = 4
+# Incident Mesh
+Mesh Scale Factor = 5.0000
+Mesh Distance from targets center = 82.4100

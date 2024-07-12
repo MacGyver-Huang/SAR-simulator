@@ -1,0 +1,77 @@
+WaveFidelity SAR processor 2020 Parameter File
+Contains parameters configuring/documenting the SAR Processing
+
+title:                  SENSOR
+date:                   2 9 1995
+raw_data_start_time:    6 54 41.8743
+channel/mode:           VHH
+earth_semi_major_axis:        6378137.0000   m
+earth_semi_minor_axis:        6356752.3141   m
+scene_center_latitude:           34.656930   decimal degrees
+scene_center_longitude:         -86.782438   decimal degrees
+track_angle:                      0.000000   degrees
+platform_altitude:               1349.7500   m
+terrain_height:                     0.0000   m
+sensor_position_vector:           0.000000       0.000000    1349.750000   m     m      m
+sensor_velocity_vector:           0.000000       0.000000       0.000000   m/s   m/s   m/s  
+sensor_acceleration_vector:       0.000000       0.000000       0.000000   m/s^2 m/s^2 m/s^2
+pulse_repetition_frequency:     213.400000   Hz
+I_bias:                           0.000000
+Q_bias:                           0.000000
+I_sigma:                          0.000000
+Q_sigma:                          0.000000
+IQ_corr:                          0.000000
+SNR_range_spectrum:                  0.000
+DAR_doppler:                         0.000   Hz
+DAR_snr:                             0.000
+doppler_polynomial:   0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00   Hz Hz/m Hz/m^2 Hz/m^3
+echo_time_delay:              3.005361e-05   s
+receiver_gain:                      0.0000   dB
+calibration_gain:                   0.0000   dB
+near_range_raw:                  4504.9230   m
+center_range_raw:                4527.6230   m
+far_range_raw:                   4550.3231   m
+near_range_slc:                  4504.9230   m
+center_range_slc:                4527.6230   m
+far_range_slc:                   4550.3231   m
+range_pixel_spacing:              0.253632   m
+range_resolution:                    0.254   m
+sec_range_migration:                 OFF
+azimuth_deskew:                      OFF
+autofocus_snr:                      0.0000
+azimuth_bandwidth_fraction:         0.8000
+azimuth_presum_factor:                   1
+offset_to_first_echo_to_process:         0   echoes
+echoes_to_process:                    1100   echoes
+range_offset:                            0   samples
+range_fft_size:                       8192
+range_looks:                             1   looks
+azimuth_looks:                           1   looks
+azimuth_offset:                    0.00000   s
+azimuth_pixel_spacing:            0.253632   m
+azimuth_resolution:                  0.396   m
+range_pixels:                          180   samples
+azimuth_pixels:                       1100   lines
+sensor_latitude:                  0.000000   decimal degrees
+sensor_longitude:                 0.000000   decimal degrees
+sensor_track_angle:               0.000000   decimal degrees
+map_coordinate_1:               34.6582027    -86.7825266        -0.0000   deg.  deg.  m
+map_coordinate_2:               34.6581055    -86.7830349        -0.0000   deg.  deg.  m
+map_coordinate_3:               34.6557528    -86.7818402         0.0000   deg.  deg.  m
+map_coordinate_4:               34.6556556    -86.7823484         0.0000   deg.  deg.  m
+map_coordinate_5:               34.6569302    -86.7824377        -0.0000   deg.  deg.  m
+number_of_state_vectors:                 5
+time_of_first_state_vector:    24877.53668   s
+state_vector_interval:             3.07331   s
+state_vector_position_1:    298930.5634   -5243998.9820    3608493.9438   m   m   m
+state_vector_velocity_1:        13.8723        -29.2561        -43.3723   m/s m/s m/s
+state_vector_position_2:    298973.1978   -5244088.8923    3608360.6453   m   m   m
+state_vector_velocity_2:        13.8725        -29.2548        -43.3731   m/s m/s m/s
+state_vector_position_3:    299015.8326   -5244178.7989    3608227.3444   m   m   m
+state_vector_velocity_3:        13.8726        -29.2536        -43.3738   m/s m/s m/s
+state_vector_position_4:    299058.4679   -5244268.7017    3608094.0412   m   m   m
+state_vector_velocity_4:        13.8728        -29.2524        -43.3746   m/s m/s m/s
+state_vector_position_5:    299101.1035   -5244358.6008    3607960.7358   m   m   m
+state_vector_velocity_5:        13.8729        -29.2512        -43.3754   m/s m/s m/s
+
+*************** END OF PROCESSING PARAMETERS ******************

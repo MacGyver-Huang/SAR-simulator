@@ -89,7 +89,7 @@ PAR_CNF="../UD04_modified/UD04_SAR3_2.0.json"   # ThetaAz=2.0[deg]
 # PAR_CNF="../UD04_modified/UD04_SAR3_2.0_Asp090.json"    # ThetaAz=2.0[deg], Asp=90[deg]
 
 PAR_STV="../UD04_modified/UD04.stv"
-MATERIAL="../UD04_modified/UD04_new.mtl"
+MATERIAL="../UD04_modified/UD04.mtl"
 FOLDER_RCS="../res_Di3_AntPat/RCS/"
 FOLDER_SAR="../res_Di3_AntPat/SAR/"
 NAME="UD04MODIFIED"

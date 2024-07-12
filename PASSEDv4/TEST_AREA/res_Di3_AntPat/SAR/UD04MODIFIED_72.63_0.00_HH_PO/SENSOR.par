@@ -1,0 +1,25 @@
+MRSL MSP 2008- Parameter file
+Contains parameters characterizing the SAR Sensor 
+
+title:                         SAR simulation from Gave Co.
+sensor_name:                   SENSOR
+chirp_direction:               UP_CHIRP
+receiver_adc_mode:             IQ
+sample_type:                   FLOAT
+receiver_spectrum_type:        NORMAL
+SAR_center_frequency:           9.600000e+09  Hz
+chirp_bandwidth:                5.910000e+08  Hz
+chirp_duration:                 3.186500e-07   s
+ADC_sampling_frequency:         5.910000e+08  Hz
+file_header_size:                   0         bytes
+record_length:                   1440         bytes
+record_header_size:                 0         bytes
+samples_per_record:               180
+antenna_azimuth_3dB_beamwidth:     2.0000     degrees
+antenna_range_3dB_beamwidth:      30.0000     degrees
+nominal_antenna_azimuth_angle:    90.0000     degrees
+nominal_antenna_look_angle:       72.6367     degrees
+nominal_platform_pitch_angle:      0.0000     degrees
+antenna_pattern_filename:      .//constant_antenna.gain
+
+*************** END OF SENSOR PARAMETERS ******************
